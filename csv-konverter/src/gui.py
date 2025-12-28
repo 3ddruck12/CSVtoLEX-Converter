@@ -5,13 +5,21 @@ import os
 import sys
 import csv
 import subprocess
+import platform
 from converter import CSVConverter
 
-# Basisverzeichnis immer relativ zur ausführbaren Datei
-BASE_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
-INPUT_PATH = os.path.join(BASE_DIR, "Import/Umsaetze.csv fehlgeschlagen")
-OUTPUT_PATH = os.path.join(BASE_DIR, "Export/lexoffice_export.csv")
-EXPORT_DIR = os.path.join(BASE_DIR, "Export")
+# Basisverzeichnis im Home-Verzeichnis des Benutzers
+HOME_DIR = os.path.expanduser("~")
+CSVTOLEX_DIR = os.path.join(HOME_DIR, "csvtolex")
+IMPORT_DIR = os.path.join(CSVTOLEX_DIR, "Import")
+EXPORT_DIR = os.path.join(CSVTOLEX_DIR, "Export")
+
+# Erstelle Verzeichnisse falls nicht vorhanden
+os.makedirs(IMPORT_DIR, exist_ok=True)
+os.makedirs(EXPORT_DIR, exist_ok=True)
+
+INPUT_PATH = os.path.join(IMPORT_DIR, "Umsaetze_DE36370601931091947001_2025.04.01.csv")
+OUTPUT_PATH = os.path.join(EXPORT_DIR, "lexoffice_export.csv")
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -54,7 +62,7 @@ class MainWindow(QWidget):
         self.header = []
 
     def import_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Importdatei auswählen", "Import", "CSV-Dateien (*.csv)")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Importdatei auswählen", IMPORT_DIR, "CSV-Dateien (*.csv)")
         if file_path:
             self.input_path = file_path
             QMessageBox.information(self, "Datei gewählt", f"Importdatei gesetzt: {file_path}")
@@ -63,33 +71,117 @@ class MainWindow(QWidget):
         if not os.path.exists(self.input_path):
             QMessageBox.warning(self, "Fehler", f"Eingabedatei nicht gefunden: {self.input_path}")
             return
-        converter = CSVConverter(self.input_path, self.output_path)
-        converter.run()
-        QMessageBox.information(self, "Fertig", "Konvertierung abgeschlossen!")
+        
+        # Stelle sicher, dass der Export-Ordner existiert und schreibbar ist
+        export_dir = os.path.dirname(self.output_path)
+        if not export_dir:
+            export_dir = EXPORT_DIR
+            self.output_path = os.path.join(export_dir, os.path.basename(self.output_path))
+        
+        try:
+            os.makedirs(export_dir, exist_ok=True)
+            # Prüfe Schreibrechte
+            if not os.access(export_dir, os.W_OK):
+                QMessageBox.critical(self, "Berechtigungsfehler", 
+                                   f"Keine Schreibrechte für Export-Verzeichnis:\n{export_dir}\n\n"
+                                   f"Bitte stellen Sie sicher, dass Sie Schreibrechte für dieses Verzeichnis haben.")
+                return
+        except Exception as e:
+            QMessageBox.critical(self, "Fehler", 
+                               f"Fehler beim Erstellen des Export-Verzeichnisses:\n{export_dir}\n\n"
+                               f"Fehler: {str(e)}")
+            return
+        
+        # Prüfe, ob die Eingabedatei lesbar ist
+        if not os.access(self.input_path, os.R_OK):
+            QMessageBox.critical(self, "Berechtigungsfehler", 
+                               f"Keine Leserechte für Eingabedatei:\n{self.input_path}")
+            return
+        
+        try:
+            converter = CSVConverter(self.input_path, self.output_path)
+            converter.run()
+            
+            # Prüfe, ob die Datei tatsächlich erstellt wurde
+            if os.path.exists(self.output_path):
+                file_size = os.path.getsize(self.output_path)
+                QMessageBox.information(self, "Fertig", 
+                                      f"Konvertierung abgeschlossen!\n\n"
+                                      f"Datei gespeichert in:\n{self.output_path}\n\n"
+                                      f"Dateigröße: {file_size} Bytes")
+            else:
+                QMessageBox.warning(self, "Warnung", 
+                                   f"Konvertierung abgeschlossen, aber Datei nicht gefunden:\n{self.output_path}")
+        except FileNotFoundError as e:
+            QMessageBox.critical(self, "Datei nicht gefunden", 
+                               f"Eingabedatei nicht gefunden:\n{str(e)}\n\n"
+                               f"Pfad: {self.input_path}")
+        except PermissionError as e:
+            QMessageBox.critical(self, "Berechtigungsfehler", 
+                               f"Keine Berechtigung:\n{str(e)}\n\n"
+                               f"Export-Pfad: {self.output_path}")
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            QMessageBox.critical(self, "Fehler bei der Konvertierung", 
+                               f"Fehler bei der Konvertierung:\n\n{str(e)}\n\n"
+                               f"Eingabe: {self.input_path}\n"
+                               f"Ausgabe: {self.output_path}\n\n"
+                               f"Details:\n{error_details}")
 
     def show_file(self):
         if not os.path.exists(self.output_path):
             QMessageBox.warning(self, "Fehler", f"Exportdatei nicht gefunden: {self.output_path}")
             return
-        with open(self.output_path, encoding="utf-8") as f:
-            reader = csv.reader(f, delimiter=';')
-            rows = list(reader)
-        if not rows:
-            self.table.clear()
-            return
-        self.header = rows[0]
-        self.table.setRowCount(len(rows)-1)
-        self.table.setColumnCount(len(rows[0]))
-        self.table.setHorizontalHeaderLabels(rows[0])
-        white = QColor(Qt.white)
-        black = QColor(Qt.black)
-        for i, row in enumerate(rows[1:]):
-            for j, value in enumerate(row):
-                item = QTableWidgetItem(value)
-                item.setBackground(white)
-                item.setForeground(black)
-                self.table.setItem(i, j, item)
-        self.table.resizeColumnsToContents()
+        
+        try:
+            with open(self.output_path, encoding="utf-8") as f:
+                reader = csv.reader(f, delimiter=';')
+                rows = list(reader)
+            
+            if not rows:
+                self.table.clear()
+                QMessageBox.warning(self, "Warnung", "Die Exportdatei ist leer.")
+                return
+            
+            # Header ist die erste Zeile
+            self.header = rows[0]
+            data_rows = rows[1:]  # Alle Zeilen außer dem Header
+            
+            # Debug-Informationen
+            print(f"Anzahl Zeilen in Datei: {len(rows)}")
+            print(f"Anzahl Datenzeilen: {len(data_rows)}")
+            print(f"Header: {self.header}")
+            
+            # Setze Tabellengröße
+            self.table.setRowCount(len(data_rows))
+            self.table.setColumnCount(len(self.header))
+            self.table.setHorizontalHeaderLabels(self.header)
+            
+            # Fülle Tabelle
+            white = QColor(Qt.white)
+            black = QColor(Qt.black)
+            for i, row in enumerate(data_rows):
+                # Stelle sicher, dass die Zeile genug Spalten hat
+                while len(row) < len(self.header):
+                    row.append('')
+                for j, value in enumerate(row):
+                    if j >= len(self.header):
+                        break
+                    item = QTableWidgetItem(str(value) if value else '')
+                    item.setBackground(white)
+                    item.setForeground(black)
+                    self.table.setItem(i, j, item)
+            
+            self.table.resizeColumnsToContents()
+            QMessageBox.information(self, "Datei geladen", f"{len(data_rows)} Zeilen wurden geladen.")
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            QMessageBox.critical(self, "Fehler beim Laden", 
+                               f"Fehler beim Laden der Datei:\n\n{str(e)}\n\n"
+                               f"Pfad: {self.output_path}\n\n"
+                               f"Details:\n{error_details}")
 
     def save_table(self):
         if not self.header or self.table.rowCount() == 0:
@@ -108,15 +200,38 @@ class MainWindow(QWidget):
 
     def open_export_folder(self):
         folder = EXPORT_DIR
+        # Stelle sicher, dass der Ordner existiert
+        if not os.path.exists(folder):
+            try:
+                os.makedirs(folder, exist_ok=True)
+            except Exception as e:
+                QMessageBox.warning(self, "Fehler", 
+                                  f"Export-Ordner konnte nicht erstellt werden:\n{folder}\n\n"
+                                  f"Fehler: {str(e)}")
+                return
+        
         try:
-            if sys.platform.startswith("win"):
-                os.startfile(folder)
-            elif sys.platform.startswith("darwin"):
-                subprocess.Popen(["open", folder])
+            # Versuche verschiedene Methoden je nach Betriebssystem
+            system = platform.system()
+            if system == "Linux":
+                subprocess.Popen(["xdg-open", folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            elif system == "Windows":
+                subprocess.Popen(["explorer", folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            elif system == "Darwin":  # macOS
+                subprocess.Popen(["open", folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             else:
-                subprocess.Popen(["xdg-open", folder])
+                # Fallback: versuche xdg-open
+                subprocess.Popen(["xdg-open", folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            QMessageBox.warning(self, "Fehler", 
+                              f"Dateimanager konnte nicht geöffnet werden.\n\n"
+                              f"Export-Ordner:\n{folder}\n\n"
+                              f"Bitte öffnen Sie den Ordner manuell.")
         except Exception as e:
-            QMessageBox.warning(self, "Fehler", f"Ordner konnte nicht geöffnet werden: {e}")
+            QMessageBox.warning(self, "Fehler", 
+                              f"Ordner konnte nicht geöffnet werden:\n{folder}\n\n"
+                              f"Fehler: {str(e)}\n\n"
+                              f"Bitte öffnen Sie den Ordner manuell.")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
