@@ -6,6 +6,9 @@ on:
       - 'v*'  # Trigger bei Tags wie v0.2, v1.0.0, etc.
   workflow_dispatch:  # Manuelles Auslösen über GitHub UI
 
+permissions:
+  contents: write
+
 jobs:
   build-deb:
     runs-on: ubuntu-latest
