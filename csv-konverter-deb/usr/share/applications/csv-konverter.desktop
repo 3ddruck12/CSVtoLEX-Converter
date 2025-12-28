@@ -1,8 +1,10 @@
 [Desktop Entry]
+Version=1.0
 Name=CSV Konverter
 Comment=CSV zu Lexoffice Konverter
 Exec=/usr/bin/csv-konverter
-Icon=csv-konverter
+Icon=/usr/share/icons/csv-konverter.png
 Terminal=false
 Type=Application
 Categories=Office;Utility;
+StartupNotify=true
