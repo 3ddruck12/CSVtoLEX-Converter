@@ -1,0 +1,85 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger bei Tags wie v1.0.0, v1.1.0, etc.
+  workflow_dispatch:  # Manuelles Auslösen über GitHub UI
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        path: repo
+      
+    - name: Set up environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dpkg-dev
+        
+    - name: Build Debian package
+      working-directory: repo
+      run: |
+        # Prüfe ob csv-konverter-deb im Repository-Root oder im übergeordneten Verzeichnis liegt
+        if [ -d "csv-konverter-deb" ]; then
+          DEB_DIR="csv-konverter-deb"
+        elif [ -d "../csv-konverter-deb" ]; then
+          DEB_DIR="../csv-konverter-deb"
+        else
+          echo "Fehler: csv-konverter-deb Verzeichnis nicht gefunden!"
+          exit 1
+        fi
+        
+        # Stelle sicher, dass das Startskript ausführbar ist
+        chmod +x $DEB_DIR/usr/bin/csv-konverter
+        chmod +x $DEB_DIR/usr/bin/csv-konverter-dir/gui
+        
+        # Baue das Debian-Paket
+        dpkg-deb --build $DEB_DIR csv-konverter.deb
+        
+    - name: Get version from tag
+      id: get_version
+      run: |
+        if [ "${{ github.ref_type }}" == "tag" ]; then
+          VERSION="${{ github.ref_name }}"
+          # Entferne 'v' Präfix falls vorhanden
+          VERSION=${VERSION#v}
+        else
+          VERSION="dev-$(date +%Y%m%d-%H%M%S)"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          repo/csv-konverter.deb
+        tag_name: ${{ github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
+        name: Release ${{ github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
+        body: |
+          ## CSV to LEX Converter Release
+          
+          Automatisch erstelltes Release.
+          
+          ### Installation
+          
+          **Debian/Ubuntu/Mint:**
+          ```bash
+          sudo dpkg -i csv-konverter.deb
+          sudo apt-get install -f  # Falls Abhängigkeiten fehlen
+          ```
+          
+          **Windows:**
+          - Laden Sie die Windows-Version aus den Releases herunter
+          
+          ### Änderungen
+          - Siehe [Commits](https://github.com/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.sha }})
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
