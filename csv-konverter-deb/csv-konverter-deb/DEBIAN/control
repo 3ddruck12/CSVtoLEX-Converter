@@ -1,0 +1,9 @@
+Package: csv-konverter
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: all
+Depends: python3
+Maintainer: Dein Name <deine@email.de>
+Description: CSV zu Lexoffice Konverter mit GUI
+ Einfache grafische Oberfläche zum Konvertieren von Bank-CSV-Dateien für Lexoffice.
