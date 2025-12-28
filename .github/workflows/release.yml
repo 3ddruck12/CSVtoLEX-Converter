@@ -6,6 +6,11 @@ on:
       - 'v*'  # Trigger bei Tags wie v0.2, v1.0.0, etc.
   workflow_dispatch:  # Manuelles Auslösen über GitHub UI
 
+# Verhindere, dass der Workflow mehrfach für denselben Tag läuft
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -103,7 +108,8 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-    
+    permissions:
+      contents: read
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
