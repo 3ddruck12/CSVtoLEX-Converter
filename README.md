@@ -137,7 +137,8 @@ chmod +x dist/gui
 - Das Tool wurde speziell für Volksbank-Exportdateien entwickelt. Andere Bankformate können möglicherweise funktionieren, sind aber nicht getestet.
 
 **Wo wird die konvertierte Datei gespeichert?**
-- Die Datei wird als `lexoffice_export.csv` im `Export/`-Verzeichnis gespeichert, das sich im selben Ordner wie die Anwendung befindet.
+- Die Datei wird als `lexoffice_export.csv` im Verzeichnis `~/csvtolex/Export/` gespeichert (im Home-Verzeichnis des Benutzers).
+- Die Import/Export-Ordner werden automatisch beim ersten Start erstellt.
 
 **Kann ich die konvertierten Daten bearbeiten?**
 - Ja, nach dem Klicken auf "Datei anzeigen" können Sie alle Daten direkt in der Tabelle bearbeiten. Vergessen Sie nicht, auf "Speichern" zu klicken.
