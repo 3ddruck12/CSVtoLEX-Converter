@@ -5,6 +5,7 @@ import os
 import sys
 import csv
 import subprocess
+import platform
 from converter import CSVConverter
 
 # Basisverzeichnis im Home-Verzeichnis des Benutzers
@@ -142,28 +143,36 @@ class MainWindow(QWidget):
         folder = EXPORT_DIR
         # Stelle sicher, dass der Ordner existiert
         if not os.path.exists(folder):
-            os.makedirs(folder, exist_ok=True)
+            try:
+                os.makedirs(folder, exist_ok=True)
+            except Exception as e:
+                QMessageBox.warning(self, "Fehler", 
+                                  f"Export-Ordner konnte nicht erstellt werden:\n{folder}\n\n"
+                                  f"Fehler: {str(e)}")
+                return
+        
         try:
             # Versuche verschiedene Methoden je nach Betriebssystem
-            import platform
             system = platform.system()
             if system == "Linux":
-                subprocess.Popen(["xdg-open", folder])
+                subprocess.Popen(["xdg-open", folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             elif system == "Windows":
-                subprocess.Popen(["explorer", folder])
+                subprocess.Popen(["explorer", folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             elif system == "Darwin":  # macOS
-                subprocess.Popen(["open", folder])
+                subprocess.Popen(["open", folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             else:
                 # Fallback: versuche xdg-open
-                subprocess.Popen(["xdg-open", folder])
+                subprocess.Popen(["xdg-open", folder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except FileNotFoundError:
             QMessageBox.warning(self, "Fehler", 
                               f"Dateimanager konnte nicht geöffnet werden.\n\n"
-                              f"Export-Ordner:\n{folder}")
+                              f"Export-Ordner:\n{folder}\n\n"
+                              f"Bitte öffnen Sie den Ordner manuell.")
         except Exception as e:
             QMessageBox.warning(self, "Fehler", 
                               f"Ordner konnte nicht geöffnet werden:\n{folder}\n\n"
-                              f"Fehler: {str(e)}")
+                              f"Fehler: {str(e)}\n\n"
+                              f"Bitte öffnen Sie den Ordner manuell.")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
