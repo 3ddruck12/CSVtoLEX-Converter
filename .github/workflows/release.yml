@@ -31,11 +31,14 @@ jobs:
         pip install PySide6 pyinstaller
         
         # Finde das richtige Verzeichnis mit gui.spec und src/gui.py
-        if [ -f "csv-konverter/src/gui.py" ] && [ -f "csv-konverter/gui.spec" ]; then
-          WORK_DIR="csv-konverter"
+        if [ -f "csv-konverter/csv-konverter/src/gui.spec" ] && [ -f "csv-konverter/csv-konverter/src/gui.py" ]; then
+          WORK_DIR="csv-konverter/csv-konverter/src"
           SPEC_FILE="gui.spec"
-        elif [ -f "src/gui.py" ] && [ -f "gui.spec" ]; then
-          WORK_DIR="."
+        elif [ -f "csv-konverter/src/gui.spec" ] && [ -f "csv-konverter/src/gui.py" ]; then
+          WORK_DIR="csv-konverter/src"
+          SPEC_FILE="gui.spec"
+        elif [ -f "src/gui.spec" ] && [ -f "src/gui.py" ]; then
+          WORK_DIR="src"
           SPEC_FILE="gui.spec"
         else
           echo "Fehler: gui.spec oder src/gui.py nicht gefunden"
@@ -51,13 +54,16 @@ jobs:
         pyinstaller --clean --noconfirm $SPEC_FILE
         
         # Kopiere die neue Executable ins Debian-Paket-Verzeichnis
-        if [ "$WORK_DIR" = "csv-konverter" ]; then
-          cp dist/gui ../csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+        # Gehe zurück zum Repository-Root
+        cd ${{ github.workspace }}
+        if [ -f "$WORK_DIR/dist/gui" ]; then
+          cp "$WORK_DIR/dist/gui" csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+          chmod +x csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+          echo "GUI-Executable neu gebaut und kopiert"
         else
-          cp dist/gui csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+          echo "Fehler: Executable nicht gefunden in $WORK_DIR/dist/gui"
+          exit 1
         fi
-        chmod +x csv-konverter-deb/usr/bin/csv-konverter-dir/gui
-        echo "GUI-Executable neu gebaut und kopiert"
         
     - name: Get version from tag
       id: get_version
