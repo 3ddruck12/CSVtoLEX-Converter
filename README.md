@@ -39,7 +39,7 @@ Ein benutzerfreundlicher Konverter, der Volksbank-Exportdateien (CSV) in das Lex
 
 1. Laden Sie die neueste Windows-Version aus den [Releases](https://github.com/3ddruck12/CSVtoLEX-Converter/releases) herunter
 2. Entpacken Sie die ZIP-Datei
-3. Führen Sie die `gui.exe` aus dem `dist/`-Verzeichnis aus
+3. Führen Sie die `gui.exe` aus dem entpackten Ordner aus (Doppelklick auf die Datei)
 
 **Hinweis:** Bei Windows Defender-Warnungen klicken Sie auf "Weitere Informationen" und dann auf "Trotzdem ausführen".
 
@@ -80,7 +80,7 @@ chmod +x dist/gui
 
 **1. Anwendung starten**
 
-- **Windows:** Doppelklick auf `gui.exe` im `dist/`-Verzeichnis
+- **Windows:** Doppelklick auf `gui.exe` im entpackten Ordner
 - **Linux:** Über das Anwendungsmenü oder Terminal-Befehl `csv-konverter`
 
 **2. CSV-Datei importieren**
