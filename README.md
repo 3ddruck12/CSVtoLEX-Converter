@@ -26,9 +26,9 @@ Ein benutzerfreundlicher Konverter, der Volksbank-Exportdateien (CSV) in das Lex
 
 **Unterstützte Betriebssysteme:**
 - Windows 10/11
-- Debian
-- Ubuntu
-- Linux Mint
+- Debian 10 (Buster) oder höher
+- Ubuntu 20.04 LTS (Focal) oder höher
+- Linux Mint 20 (Ulyana) oder höher
 
 **Systemanforderungen:**
 - Keine zusätzliche Software erforderlich (Standalone-Anwendung)
