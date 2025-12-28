@@ -1,10 +1,26 @@
 Package: csv-konverter
-Version: 0.2
+Version: 0.2.6
 Section: utils
 Priority: optional
 Architecture: amd64
 Depends: libc6 (>= 2.28)
-Maintainer: Dein Name <deine@email.de>
-Description: CSV zu Lexoffice Konverter mit GUI
- Einfache grafische Oberfläche zum Konvertieren von Bank-CSV-Dateien für Lexoffice.
+Maintainer: 3ddruck12 <github@3ddruck12.de>
+Description: CSV zu Lexoffice Konverter mit grafischer Benutzeroberfläche
+ Ein benutzerfreundlicher Konverter, der Volksbank-Exportdateien (CSV) in das
+ Lexoffice-Importformat umwandelt. Verfügbar als Standalone-Anwendung mit
+ moderner grafischer Benutzeroberfläche.
+ .
+ Features:
+  - Automatische Konvertierung von Volksbank-CSV-Dateien
+  - Vorschau-Funktion für konvertierte Daten
+  - Manuelle Bearbeitung der Daten in einer Tabelle
+  - Einfacher Export ins Lexoffice-Format
+  - Import/Export-Ordner im Home-Verzeichnis (~/csvtolex)
+ .
+ Unterstützte Betriebssysteme:
+  - Debian 10 (Buster) oder höher
+  - Ubuntu 20.04 LTS (Focal) oder höher
+  - Linux Mint 20 (Ulyana) oder höher
+ .
  Standalone-Anwendung - keine Python-Installation erforderlich.
+ Alle Abhängigkeiten sind in der Executable enthalten.
