@@ -61,7 +61,7 @@ class MainWindow(QWidget):
         self.header = []
 
     def import_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Importdatei auswählen", "Import", "CSV-Dateien (*.csv)")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Importdatei auswählen", IMPORT_DIR, "CSV-Dateien (*.csv)")
         if file_path:
             self.input_path = file_path
             QMessageBox.information(self, "Datei gewählt", f"Importdatei gesetzt: {file_path}")
