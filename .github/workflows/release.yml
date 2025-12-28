@@ -36,6 +36,9 @@ jobs:
         pip install PySide6 pyinstaller
         
         # Finde das richtige Verzeichnis mit gui.spec und src/gui.py
+        echo "Suche nach gui.spec und gui.py..."
+        find . -name "gui.spec" -o -name "gui.py" | head -10
+        
         if [ -f "csv-konverter/csv-konverter/src/gui.spec" ] && [ -f "csv-konverter/csv-konverter/src/gui.py" ]; then
           WORK_DIR="csv-konverter/csv-konverter/src"
           SPEC_FILE="gui.spec"
@@ -46,29 +49,34 @@ jobs:
           WORK_DIR="src"
           SPEC_FILE="gui.spec"
         else
-          echo "Fehler: gui.spec oder src/gui.py nicht gefunden"
+          echo "Fehler: gui.spec oder gui.py nicht gefunden"
           find . -name "gui.spec" -o -name "gui.py" | head -10
           exit 1
         fi
         
         echo "Arbeitsverzeichnis: $WORK_DIR"
         echo "Spec-Datei: $SPEC_FILE"
+        echo "Prüfe ob Dateien existieren:"
+        ls -la "$WORK_DIR/gui.spec" "$WORK_DIR/gui.py" || echo "Dateien nicht gefunden!"
         
         # Baue die GUI-Executable
-        cd $WORK_DIR
-        pyinstaller --clean --noconfirm $SPEC_FILE
+        cd "$WORK_DIR"
+        pyinstaller --clean --noconfirm "$SPEC_FILE"
+        
+        # Prüfe ob die Executable erstellt wurde
+        if [ ! -f "dist/gui" ]; then
+          echo "Fehler: Executable wurde nicht erstellt"
+          ls -la dist/ || echo "dist-Verzeichnis existiert nicht"
+          exit 1
+        fi
         
         # Kopiere die neue Executable ins Debian-Paket-Verzeichnis
         # Gehe zurück zum Repository-Root
-        cd ${{ github.workspace }}
-        if [ -f "$WORK_DIR/dist/gui" ]; then
-          cp "$WORK_DIR/dist/gui" csv-konverter-deb/usr/bin/csv-konverter-dir/gui
-          chmod +x csv-konverter-deb/usr/bin/csv-konverter-dir/gui
-          echo "GUI-Executable neu gebaut und kopiert"
-        else
-          echo "Fehler: Executable nicht gefunden in $WORK_DIR/dist/gui"
-          exit 1
-        fi
+        cd "${{ github.workspace }}"
+        cp "$WORK_DIR/dist/gui" csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+        chmod +x csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+        echo "GUI-Executable neu gebaut und kopiert"
+        ls -lh csv-konverter-deb/usr/bin/csv-konverter-dir/gui
         
     - name: Get version from tag
       id: get_version
