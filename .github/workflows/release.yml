@@ -86,6 +86,8 @@ jobs:
   create-release:
     needs: [build-deb, build-windows]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
     - name: Checkout code
