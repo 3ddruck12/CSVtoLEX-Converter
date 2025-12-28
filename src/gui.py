@@ -133,25 +133,55 @@ class MainWindow(QWidget):
         if not os.path.exists(self.output_path):
             QMessageBox.warning(self, "Fehler", f"Exportdatei nicht gefunden: {self.output_path}")
             return
-        with open(self.output_path, encoding="utf-8") as f:
-            reader = csv.reader(f, delimiter=';')
-            rows = list(reader)
-        if not rows:
-            self.table.clear()
-            return
-        self.header = rows[0]
-        self.table.setRowCount(len(rows)-1)
-        self.table.setColumnCount(len(rows[0]))
-        self.table.setHorizontalHeaderLabels(rows[0])
-        white = QColor(Qt.white)
-        black = QColor(Qt.black)
-        for i, row in enumerate(rows[1:]):
-            for j, value in enumerate(row):
-                item = QTableWidgetItem(value)
-                item.setBackground(white)
-                item.setForeground(black)
-                self.table.setItem(i, j, item)
-        self.table.resizeColumnsToContents()
+        
+        try:
+            with open(self.output_path, encoding="utf-8") as f:
+                reader = csv.reader(f, delimiter=';')
+                rows = list(reader)
+            
+            if not rows:
+                self.table.clear()
+                QMessageBox.warning(self, "Warnung", "Die Exportdatei ist leer.")
+                return
+            
+            # Header ist die erste Zeile
+            self.header = rows[0]
+            data_rows = rows[1:]  # Alle Zeilen außer dem Header
+            
+            # Debug-Informationen
+            print(f"Anzahl Zeilen in Datei: {len(rows)}")
+            print(f"Anzahl Datenzeilen: {len(data_rows)}")
+            print(f"Header: {self.header}")
+            
+            # Setze Tabellengröße
+            self.table.setRowCount(len(data_rows))
+            self.table.setColumnCount(len(self.header))
+            self.table.setHorizontalHeaderLabels(self.header)
+            
+            # Fülle Tabelle
+            white = QColor(Qt.white)
+            black = QColor(Qt.black)
+            for i, row in enumerate(data_rows):
+                # Stelle sicher, dass die Zeile genug Spalten hat
+                while len(row) < len(self.header):
+                    row.append('')
+                for j, value in enumerate(row):
+                    if j >= len(self.header):
+                        break
+                    item = QTableWidgetItem(str(value) if value else '')
+                    item.setBackground(white)
+                    item.setForeground(black)
+                    self.table.setItem(i, j, item)
+            
+            self.table.resizeColumnsToContents()
+            QMessageBox.information(self, "Datei geladen", f"{len(data_rows)} Zeilen wurden geladen.")
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            QMessageBox.critical(self, "Fehler beim Laden", 
+                               f"Fehler beim Laden der Datei:\n\n{str(e)}\n\n"
+                               f"Pfad: {self.output_path}\n\n"
+                               f"Details:\n{error_details}")
 
     def save_table(self):
         if not self.header or self.table.rowCount() == 0:
