@@ -55,22 +55,24 @@ jobs:
         
     - name: Build Windows executable
       run: |
-        # Prüfe ob gui.spec im src-Verzeichnis existiert
+        # Finde das richtige Verzeichnis mit gui.spec
         if (Test-Path "csv-konverter\src\gui.spec") {
-          cd csv-konverter\src
+          $WORK_DIR = "csv-konverter\src"
         } elseif (Test-Path "src\gui.spec") {
-          cd src
+          $WORK_DIR = "src"
         } else {
           echo "Fehler: gui.spec nicht gefunden"
           exit 1
         }
+        cd $WORK_DIR
         pyinstaller --clean --noconfirm gui.spec
-        if (Test-Path "dist\CSVtoLEX.exe") {
-          Move-Item "dist\CSVtoLEX.exe" "..\..\CSVtoLEX.exe"
-        } elseif (Test-Path "dist\gui.exe") {
-          Move-Item "dist\gui.exe" "..\..\CSVtoLEX.exe"
+        # Suche nach der erstellten exe-Datei
+        $exeFile = Get-ChildItem -Recurse -Filter "*.exe" | Where-Object { $_.DirectoryName -like "*dist*" } | Select-Object -First 1
+        if ($exeFile) {
+          Copy-Item $exeFile.FullName "..\..\CSVtoLEX.exe"
+          echo "Exe-Datei gefunden: $($exeFile.FullName)"
         } else {
-          echo "Fehler: Exe-Datei nicht gefunden in dist/"
+          echo "Fehler: Exe-Datei nicht gefunden"
           Get-ChildItem -Recurse -Filter "*.exe" | Select-Object FullName
           exit 1
         }
