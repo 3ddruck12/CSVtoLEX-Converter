@@ -63,19 +63,24 @@ class CSVConverter:
                 valutadatum = buchungstag
             
             # Datumsformat ggf. anpassen
-            for date_value in [buchungstag, valutadatum]:
-                if date_value:
-                    try:
-                        # Versuche verschiedene Datumsformate
-                        for fmt in ['%d.%m.%Y', '%Y-%m-%d', '%d/%m/%Y']:
-                            try:
-                                dt = datetime.strptime(date_value, fmt)
-                                date_value = dt.strftime('%d.%m.%Y')
-                                break
-                            except ValueError:
-                                continue
-                    except Exception:
-                        pass
+            def format_date(date_str):
+                if not date_str:
+                    return ''
+                try:
+                    # Versuche verschiedene Datumsformate
+                    for fmt in ['%d.%m.%Y', '%Y-%m-%d', '%d/%m/%Y', '%Y.%m.%d']:
+                        try:
+                            dt = datetime.strptime(date_str.strip(), fmt)
+                            return dt.strftime('%d.%m.%Y')
+                        except ValueError:
+                            continue
+                    # Wenn kein Format passt, gib Original zurück
+                    return date_str
+                except Exception:
+                    return date_str
+            
+            buchungstag = format_date(buchungstag)
+            valutadatum = format_date(valutadatum)
             
             # Betrag formatieren (Komma als Dezimaltrennzeichen)
             if betrag:
