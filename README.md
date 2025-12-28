@@ -31,7 +31,8 @@ Ein benutzerfreundlicher Konverter, der Volksbank-Exportdateien (CSV) in das Lex
 - Linux Mint 20 (Ulyana) oder höher
 
 **Systemanforderungen:**
-- Keine zusätzliche Software erforderlich (Standalone-Anwendung)
+- **Für .deb/.exe Pakete:** Keine zusätzliche Software erforderlich (Standalone-Anwendung)
+- **Für Installation aus Quellcode:** Python 3.6 oder höher, PySide6, pandas
 
 ## 🚀 Installation
 
