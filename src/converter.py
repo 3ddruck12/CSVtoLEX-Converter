@@ -43,29 +43,68 @@ class CSVConverter:
             # Zeilen mit "Abschluss" im Buchungstext überspringen
             if 'Abschluss' in (row.get('Buchungstext') or ''):
                 continue
-            converted_row = {
-                'Buchungstag': row.get('Buchungstag') or row.get('Buchungstag') or row.get('Buchungsdatum') or row.get('Buchungstag'),
-                'Wertstellung': row.get('Valutadatum') or row.get('Wertstellung'),
-                'Umsatzart': row.get('Buchungstext'),
-                'Auftraggeber/Empfänger': row.get('Name Zahlungsbeteiligter'),
-                'IBAN': row.get('IBAN Zahlungsbeteiligter'),
-                'BIC': row.get('BIC (SWIFT-Code) Zahlungsbeteiligter'),
-                'Verwendungszweck': row.get('Verwendungszweck'),
-                'Betrag': row.get('Betrag'),
-                'Währung': row.get('Waehrung') or 'EUR',
-            }
+            
+            # Extrahiere Werte mit Fallbacks
+            buchungstag = row.get('Buchungstag') or row.get('Buchungsdatum') or ''
+            valutadatum = row.get('Valutadatum') or row.get('Wertstellung') or ''
+            buchungstext = row.get('Buchungstext') or ''
+            name = row.get('Name Zahlungsbeteiligter') or ''
+            iban = row.get('IBAN Zahlungsbeteiligter') or ''
+            bic = row.get('BIC (SWIFT-Code) Zahlungsbeteiligter') or ''
+            verwendungszweck = row.get('Verwendungszweck') or ''
+            betrag = row.get('Betrag') or ''
+            waehrung = row.get('Waehrung') or 'EUR'
+            
+            # Wenn Buchungstag leer ist, versuche Wertstellung zu verwenden
+            if not buchungstag and valutadatum:
+                buchungstag = valutadatum
+            # Wenn Wertstellung leer ist, verwende Buchungstag
+            if not valutadatum and buchungstag:
+                valutadatum = buchungstag
+            
             # Datumsformat ggf. anpassen
-            for key in ['Buchungstag', 'Wertstellung']:
-                if converted_row[key]:
+            for date_value in [buchungstag, valutadatum]:
+                if date_value:
                     try:
-                        dt = datetime.strptime(converted_row[key], '%d.%m.%Y')
-                        converted_row[key] = dt.strftime('%d.%m.%Y')
+                        # Versuche verschiedene Datumsformate
+                        for fmt in ['%d.%m.%Y', '%Y-%m-%d', '%d/%m/%Y']:
+                            try:
+                                dt = datetime.strptime(date_value, fmt)
+                                date_value = dt.strftime('%d.%m.%Y')
+                                break
+                            except ValueError:
+                                continue
                     except Exception:
                         pass
-            # Betrag ggf. ins richtige Format bringen (Komma als Dezimaltrennzeichen)
-            if converted_row['Betrag']:
-                converted_row['Betrag'] = str(converted_row['Betrag']).replace('.', ',')
-            converted.append(converted_row)
+            
+            # Betrag formatieren (Komma als Dezimaltrennzeichen)
+            if betrag:
+                # Entferne Leerzeichen und ersetze Punkt durch Komma
+                betrag = str(betrag).strip().replace('.', ',')
+                # Wenn kein Komma vorhanden ist, könnte es ein Integer sein
+                if ',' not in betrag and '.' not in betrag:
+                    # Behalte es als ist (kann später als Ganzzahl interpretiert werden)
+                    pass
+            else:
+                betrag = '0,00'
+            
+            # Erstelle konvertierte Zeile - alle Felder müssen vorhanden sein
+            converted_row = {
+                'Buchungstag': buchungstag or '',
+                'Wertstellung': valutadatum or '',
+                'Umsatzart': buchungstext or '',
+                'Auftraggeber/Empfänger': name or '',
+                'IBAN': iban or '',
+                'BIC': bic or '',
+                'Verwendungszweck': verwendungszweck or '',
+                'Betrag': betrag or '0,00',
+                'Währung': waehrung or 'EUR',
+            }
+            
+            # Nur hinzufügen, wenn mindestens Buchungstag oder Betrag vorhanden ist
+            if converted_row['Buchungstag'] or converted_row['Betrag']:
+                converted.append(converted_row)
+        
         return lexoffice_fields, converted
 
     def write_lexoffice_csv(self, data):
