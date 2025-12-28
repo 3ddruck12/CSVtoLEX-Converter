@@ -1,0 +1,28 @@
+# Build-Verzeichnisse
+build/
+dist/
+*.pyc
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Lokale Export/Import (werden beim Laufen erstellt)
+Export/
+Import/
