@@ -20,7 +20,24 @@ jobs:
     - name: Set up environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y dpkg-dev
+        sudo apt-get install -y dpkg-dev python3 python3-pip python3-venv
+        
+    - name: Build GUI executable
+      run: |
+        # Erstelle virtuelle Umgebung und installiere Abhängigkeiten
+        python3 -m venv build_env
+        source build_env/bin/activate
+        pip install --upgrade pip
+        pip install PySide6 pyinstaller
+        
+        # Baue die GUI-Executable
+        cd csv-konverter
+        pyinstaller --clean --noconfirm gui.spec
+        
+        # Kopiere die neue Executable ins Debian-Paket-Verzeichnis
+        cp dist/gui csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+        chmod +x csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+        echo "GUI-Executable neu gebaut und kopiert"
         
     - name: Get version from tag
       id: get_version
