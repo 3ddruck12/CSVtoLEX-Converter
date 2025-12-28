@@ -9,9 +9,28 @@ class CSVConverter:
 
     def read_volksbank_csv(self):
         # Liest die Volksbank-CSV und gibt eine Liste von Dictionaries zurück
-        with open(self.input_file, mode='r', encoding='utf-8') as infile:
-            reader = csv.DictReader(infile, delimiter=';')
-            return list(reader)
+        if not os.path.exists(self.input_file):
+            raise FileNotFoundError(f"Eingabedatei nicht gefunden: {self.input_file}")
+        if not os.access(self.input_file, os.R_OK):
+            raise PermissionError(f"Keine Leserechte für Datei: {self.input_file}")
+        
+        try:
+            with open(self.input_file, mode='r', encoding='utf-8') as infile:
+                reader = csv.DictReader(infile, delimiter=';')
+                data = list(reader)
+                if not data:
+                    raise ValueError("Die CSV-Datei ist leer oder enthält keine Daten")
+                return data
+        except UnicodeDecodeError:
+            # Versuche mit anderer Kodierung
+            with open(self.input_file, mode='r', encoding='latin-1') as infile:
+                reader = csv.DictReader(infile, delimiter=';')
+                data = list(reader)
+                if not data:
+                    raise ValueError("Die CSV-Datei ist leer oder enthält keine Daten")
+                return data
+        except Exception as e:
+            raise Exception(f"Fehler beim Lesen der CSV-Datei: {str(e)}")
 
     def convert_to_lexoffice_format(self, data):
         # Erwartete Lexoffice-Spalten
@@ -75,6 +94,13 @@ class CSVConverter:
             raise Exception(f"Fehler beim Schreiben der Datei '{self.output_file}': {str(e)}")
 
     def run(self):
-        data = self.read_volksbank_csv()
-        converted_data = self.convert_to_lexoffice_format(data)
-        self.write_lexoffice_csv(converted_data)
+        try:
+            data = self.read_volksbank_csv()
+            if not data:
+                raise ValueError("Keine Daten zum Konvertieren gefunden")
+            converted_data = self.convert_to_lexoffice_format(data)
+            if not converted_data[1]:  # Keine konvertierten Zeilen
+                raise ValueError("Keine Daten nach der Konvertierung vorhanden")
+            self.write_lexoffice_csv(converted_data)
+        except Exception as e:
+            raise Exception(f"Fehler beim Konvertieren: {str(e)}")

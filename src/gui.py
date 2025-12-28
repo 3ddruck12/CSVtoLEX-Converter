@@ -74,31 +74,60 @@ class MainWindow(QWidget):
         
         # Stelle sicher, dass der Export-Ordner existiert und schreibbar ist
         export_dir = os.path.dirname(self.output_path)
-        if export_dir:
-            try:
-                os.makedirs(export_dir, exist_ok=True)
-                # Prüfe Schreibrechte
-                if not os.access(export_dir, os.W_OK):
-                    QMessageBox.critical(self, "Berechtigungsfehler", 
-                                       f"Keine Schreibrechte für Export-Verzeichnis:\n{export_dir}\n\n"
-                                       f"Bitte stellen Sie sicher, dass Sie Schreibrechte für dieses Verzeichnis haben.")
-                    return
-            except Exception as e:
-                QMessageBox.critical(self, "Fehler", 
-                                   f"Fehler beim Erstellen des Export-Verzeichnisses:\n{export_dir}\n\n"
-                                   f"Fehler: {str(e)}")
+        if not export_dir:
+            export_dir = EXPORT_DIR
+            self.output_path = os.path.join(export_dir, os.path.basename(self.output_path))
+        
+        try:
+            os.makedirs(export_dir, exist_ok=True)
+            # Prüfe Schreibrechte
+            if not os.access(export_dir, os.W_OK):
+                QMessageBox.critical(self, "Berechtigungsfehler", 
+                                   f"Keine Schreibrechte für Export-Verzeichnis:\n{export_dir}\n\n"
+                                   f"Bitte stellen Sie sicher, dass Sie Schreibrechte für dieses Verzeichnis haben.")
                 return
+        except Exception as e:
+            QMessageBox.critical(self, "Fehler", 
+                               f"Fehler beim Erstellen des Export-Verzeichnisses:\n{export_dir}\n\n"
+                               f"Fehler: {str(e)}")
+            return
+        
+        # Prüfe, ob die Eingabedatei lesbar ist
+        if not os.access(self.input_path, os.R_OK):
+            QMessageBox.critical(self, "Berechtigungsfehler", 
+                               f"Keine Leserechte für Eingabedatei:\n{self.input_path}")
+            return
         
         try:
             converter = CSVConverter(self.input_path, self.output_path)
             converter.run()
-            QMessageBox.information(self, "Fertig", 
-                                  f"Konvertierung abgeschlossen!\n\n"
-                                  f"Datei gespeichert in:\n{self.output_path}")
-        except Exception as e:
-            QMessageBox.critical(self, "Fehler", 
-                               f"Fehler bei der Konvertierung:\n\n{str(e)}\n\n"
+            
+            # Prüfe, ob die Datei tatsächlich erstellt wurde
+            if os.path.exists(self.output_path):
+                file_size = os.path.getsize(self.output_path)
+                QMessageBox.information(self, "Fertig", 
+                                      f"Konvertierung abgeschlossen!\n\n"
+                                      f"Datei gespeichert in:\n{self.output_path}\n\n"
+                                      f"Dateigröße: {file_size} Bytes")
+            else:
+                QMessageBox.warning(self, "Warnung", 
+                                   f"Konvertierung abgeschlossen, aber Datei nicht gefunden:\n{self.output_path}")
+        except FileNotFoundError as e:
+            QMessageBox.critical(self, "Datei nicht gefunden", 
+                               f"Eingabedatei nicht gefunden:\n{str(e)}\n\n"
+                               f"Pfad: {self.input_path}")
+        except PermissionError as e:
+            QMessageBox.critical(self, "Berechtigungsfehler", 
+                               f"Keine Berechtigung:\n{str(e)}\n\n"
                                f"Export-Pfad: {self.output_path}")
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            QMessageBox.critical(self, "Fehler bei der Konvertierung", 
+                               f"Fehler bei der Konvertierung:\n\n{str(e)}\n\n"
+                               f"Eingabe: {self.input_path}\n"
+                               f"Ausgabe: {self.output_path}\n\n"
+                               f"Details:\n{error_details}")
 
     def show_file(self):
         if not os.path.exists(self.output_path):
