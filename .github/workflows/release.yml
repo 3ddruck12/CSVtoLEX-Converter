@@ -13,8 +13,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        path: repo
       
     - name: Set up environment
       run: |
@@ -22,24 +20,13 @@ jobs:
         sudo apt-get install -y dpkg-dev
         
     - name: Build Debian package
-      working-directory: repo
       run: |
-        # Prüfe ob csv-konverter-deb im Repository-Root oder im übergeordneten Verzeichnis liegt
-        if [ -d "csv-konverter-deb" ]; then
-          DEB_DIR="csv-konverter-deb"
-        elif [ -d "../csv-konverter-deb" ]; then
-          DEB_DIR="../csv-konverter-deb"
-        else
-          echo "Fehler: csv-konverter-deb Verzeichnis nicht gefunden!"
-          exit 1
-        fi
-        
         # Stelle sicher, dass das Startskript ausführbar ist
-        chmod +x $DEB_DIR/usr/bin/csv-konverter
-        chmod +x $DEB_DIR/usr/bin/csv-konverter-dir/gui
+        chmod +x csv-konverter-deb/usr/bin/csv-konverter
+        chmod +x csv-konverter-deb/usr/bin/csv-konverter-dir/gui
         
         # Baue das Debian-Paket
-        dpkg-deb --build $DEB_DIR csv-konverter.deb
+        dpkg-deb --build csv-konverter-deb csv-konverter.deb
         
     - name: Get version from tag
       id: get_version
@@ -58,7 +45,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          repo/csv-konverter.deb
+          csv-konverter.deb
         tag_name: ${{ github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
         name: Release ${{ github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
         body: |
