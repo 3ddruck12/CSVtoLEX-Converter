@@ -1,14 +1,9 @@
 #!/bin/bash
 # Post-Installationsskript für csv-konverter
 
-# Erstelle Import/Export Ordner falls nicht vorhanden
-INSTALL_DIR="/usr/bin/csv-konverter-dir"
-if [ -d "$INSTALL_DIR" ]; then
-    mkdir -p "$INSTALL_DIR/Import"
-    mkdir -p "$INSTALL_DIR/Export"
-    chmod 755 "$INSTALL_DIR/Import"
-    chmod 755 "$INSTALL_DIR/Export"
-fi
+# Erstelle Import/Export Ordner im Home-Verzeichnis des Benutzers
+# (wird beim ersten Start der Anwendung erstellt, hier nur als Fallback)
+# Die Anwendung erstellt die Ordner automatisch in ~/csvtolex/Import und ~/csvtolex/Export
 
 # Aktualisiere Desktop-Datenbank
 if command -v update-desktop-database >/dev/null 2>&1; then

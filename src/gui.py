@@ -7,11 +7,18 @@ import csv
 import subprocess
 from converter import CSVConverter
 
-# Basisverzeichnis immer relativ zur ausführbaren Datei
-BASE_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
-INPUT_PATH = os.path.join(BASE_DIR, "Import/Umsaetze_DE36370601931091947001_2025.04.01.csv")
-OUTPUT_PATH = os.path.join(BASE_DIR, "Export/lexoffice_export.csv")
-EXPORT_DIR = os.path.join(BASE_DIR, "Export")
+# Basisverzeichnis im Home-Verzeichnis des Benutzers
+HOME_DIR = os.path.expanduser("~")
+CSVTOLEX_DIR = os.path.join(HOME_DIR, "csvtolex")
+IMPORT_DIR = os.path.join(CSVTOLEX_DIR, "Import")
+EXPORT_DIR = os.path.join(CSVTOLEX_DIR, "Export")
+
+# Erstelle Verzeichnisse falls nicht vorhanden
+os.makedirs(IMPORT_DIR, exist_ok=True)
+os.makedirs(EXPORT_DIR, exist_ok=True)
+
+INPUT_PATH = os.path.join(IMPORT_DIR, "Umsaetze_DE36370601931091947001_2025.04.01.csv")
+OUTPUT_PATH = os.path.join(EXPORT_DIR, "lexoffice_export.csv")
 
 class MainWindow(QWidget):
     def __init__(self):
