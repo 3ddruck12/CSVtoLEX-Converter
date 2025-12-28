@@ -5,7 +5,7 @@ a = Analysis(
     ['gui.py'],
     pathex=[],
     binaries=[],
-    datas=[('../../Import/Beispiel_Umsaetze_2025.csv', 'Import')],
+    datas=[('../Import/Beispiel_Umsaetze_2025.csv', 'Import')],
     hiddenimports=['PySide6'],
     hookspath=[],
     hooksconfig={},
