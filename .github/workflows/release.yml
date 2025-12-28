@@ -30,13 +30,23 @@ jobs:
         pip install --upgrade pip
         pip install PySide6 pyinstaller
         
+        # Finde das richtige Verzeichnis mit gui.spec
+        if [ -f "csv-konverter/gui.spec" ]; then
+          WORK_DIR="csv-konverter"
+        elif [ -f "gui.spec" ]; then
+          WORK_DIR="."
+        else
+          echo "Fehler: gui.spec nicht gefunden"
+          exit 1
+        fi
+        
         # Baue die GUI-Executable
-        cd csv-konverter
+        cd $WORK_DIR
         pyinstaller --clean --noconfirm gui.spec
         
         # Kopiere die neue Executable ins Debian-Paket-Verzeichnis
-        cp dist/gui csv-konverter-deb/usr/bin/csv-konverter-dir/gui
-        chmod +x csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+        cp dist/gui ../csv-konverter-deb/usr/bin/csv-konverter-dir/gui
+        chmod +x ../csv-konverter-deb/usr/bin/csv-konverter-dir/gui
         echo "GUI-Executable neu gebaut und kopiert"
         
     - name: Get version from tag
