@@ -140,10 +140,30 @@ class MainWindow(QWidget):
 
     def open_export_folder(self):
         folder = EXPORT_DIR
+        # Stelle sicher, dass der Ordner existiert
+        if not os.path.exists(folder):
+            os.makedirs(folder, exist_ok=True)
         try:
-            subprocess.Popen(["xdg-open", folder])
+            # Versuche verschiedene Methoden je nach Betriebssystem
+            import platform
+            system = platform.system()
+            if system == "Linux":
+                subprocess.Popen(["xdg-open", folder])
+            elif system == "Windows":
+                subprocess.Popen(["explorer", folder])
+            elif system == "Darwin":  # macOS
+                subprocess.Popen(["open", folder])
+            else:
+                # Fallback: versuche xdg-open
+                subprocess.Popen(["xdg-open", folder])
+        except FileNotFoundError:
+            QMessageBox.warning(self, "Fehler", 
+                              f"Dateimanager konnte nicht geöffnet werden.\n\n"
+                              f"Export-Ordner:\n{folder}")
         except Exception as e:
-            QMessageBox.warning(self, "Fehler", f"Ordner konnte nicht geöffnet werden: {e}")
+            QMessageBox.warning(self, "Fehler", 
+                              f"Ordner konnte nicht geöffnet werden:\n{folder}\n\n"
+                              f"Fehler: {str(e)}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
