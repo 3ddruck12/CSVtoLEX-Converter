@@ -1,0 +1,19 @@
+#!/bin/bash
+# Post-Installationsskript für csv-konverter
+
+# Erstelle Import/Export Ordner falls nicht vorhanden
+INSTALL_DIR="/usr/bin/csv-konverter-dir"
+if [ -d "$INSTALL_DIR" ]; then
+    mkdir -p "$INSTALL_DIR/Import"
+    mkdir -p "$INSTALL_DIR/Export"
+    chmod 755 "$INSTALL_DIR/Import"
+    chmod 755 "$INSTALL_DIR/Export"
+fi
+
+# Aktualisiere Desktop-Datenbank
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database -q 2>/dev/null || true
+fi
+
+exit 0
+

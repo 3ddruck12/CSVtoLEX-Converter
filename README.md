@@ -47,6 +47,7 @@ Ein benutzerfreundlicher Konverter, der Volksbank-Exportdateien (CSV) in das Lex
 
 **Option 1: Debian-Paket (.deb) - Empfohlen**
 
+**Erstinstallation:**
 1. Laden Sie das neueste `.deb`-Paket aus den [Releases](https://github.com/3ddruck12/CSVtoLEX-Converter/releases) herunter
 2. Installieren Sie das Paket:
 ```bash
@@ -56,7 +57,19 @@ sudo dpkg -i csv-konverter.deb
 ```bash
 sudo apt-get install -f
 ```
-4. Starten Sie die Anwendung über das Anwendungsmenü oder mit:
+
+**Update auf eine neuere Version:**
+1. Laden Sie die neue `.deb`-Datei herunter
+2. Installieren Sie die neue Version (ersetzt automatisch die alte):
+```bash
+sudo dpkg -i csv-konverter.deb
+sudo apt-get install -f  # Falls nötig
+```
+Die neue Version ersetzt automatisch die alte Installation.
+
+**Anwendung starten:**
+- Über das Anwendungsmenü: Suchen Sie nach "CSV Konverter"
+- Oder im Terminal:
 ```bash
 csv-konverter
 ```

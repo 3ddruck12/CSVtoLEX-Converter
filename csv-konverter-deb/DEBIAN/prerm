@@ -1,0 +1,6 @@
+#!/bin/bash
+# Pre-Removal-Skript für csv-konverter
+
+# Keine speziellen Aktionen vor dem Entfernen nötig
+exit 0
+
