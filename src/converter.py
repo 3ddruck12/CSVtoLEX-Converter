@@ -54,13 +54,25 @@ class CSVConverter:
         fields, rows = data
         # Stelle sicher, dass der Export-Ordner existiert
         output_dir = os.path.dirname(self.output_file)
-        if output_dir and not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
-        with open(self.output_file, mode='w', encoding='utf-8', newline='') as outfile:
-            writer = csv.DictWriter(outfile, fieldnames=fields, delimiter=';')
-            writer.writeheader()
-            for row in rows:
-                writer.writerow(row)
+        if output_dir:
+            try:
+                os.makedirs(output_dir, exist_ok=True)
+                # Prüfe Schreibrechte
+                if not os.access(output_dir, os.W_OK):
+                    raise PermissionError(f"Keine Schreibrechte für Verzeichnis: {output_dir}")
+            except Exception as e:
+                raise Exception(f"Fehler beim Erstellen des Export-Verzeichnisses '{output_dir}': {str(e)}")
+        
+        try:
+            with open(self.output_file, mode='w', encoding='utf-8', newline='') as outfile:
+                writer = csv.DictWriter(outfile, fieldnames=fields, delimiter=';')
+                writer.writeheader()
+                for row in rows:
+                    writer.writerow(row)
+        except PermissionError as e:
+            raise Exception(f"Keine Schreibrechte für Datei '{self.output_file}': {str(e)}")
+        except Exception as e:
+            raise Exception(f"Fehler beim Schreiben der Datei '{self.output_file}': {str(e)}")
 
     def run(self):
         data = self.read_volksbank_csv()

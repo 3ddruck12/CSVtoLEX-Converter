@@ -70,16 +70,34 @@ class MainWindow(QWidget):
         if not os.path.exists(self.input_path):
             QMessageBox.warning(self, "Fehler", f"Eingabedatei nicht gefunden: {self.input_path}")
             return
-        # Stelle sicher, dass der Export-Ordner existiert
+        
+        # Stelle sicher, dass der Export-Ordner existiert und schreibbar ist
         export_dir = os.path.dirname(self.output_path)
-        if export_dir and not os.path.exists(export_dir):
-            os.makedirs(export_dir, exist_ok=True)
+        if export_dir:
+            try:
+                os.makedirs(export_dir, exist_ok=True)
+                # Prüfe Schreibrechte
+                if not os.access(export_dir, os.W_OK):
+                    QMessageBox.critical(self, "Berechtigungsfehler", 
+                                       f"Keine Schreibrechte für Export-Verzeichnis:\n{export_dir}\n\n"
+                                       f"Bitte stellen Sie sicher, dass Sie Schreibrechte für dieses Verzeichnis haben.")
+                    return
+            except Exception as e:
+                QMessageBox.critical(self, "Fehler", 
+                                   f"Fehler beim Erstellen des Export-Verzeichnisses:\n{export_dir}\n\n"
+                                   f"Fehler: {str(e)}")
+                return
+        
         try:
             converter = CSVConverter(self.input_path, self.output_path)
             converter.run()
-            QMessageBox.information(self, "Fertig", "Konvertierung abgeschlossen!")
+            QMessageBox.information(self, "Fertig", 
+                                  f"Konvertierung abgeschlossen!\n\n"
+                                  f"Datei gespeichert in:\n{self.output_path}")
         except Exception as e:
-            QMessageBox.critical(self, "Fehler", f"Fehler bei der Konvertierung:\n{str(e)}")
+            QMessageBox.critical(self, "Fehler", 
+                               f"Fehler bei der Konvertierung:\n\n{str(e)}\n\n"
+                               f"Export-Pfad: {self.output_path}")
 
     def show_file(self):
         if not os.path.exists(self.output_path):
