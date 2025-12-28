@@ -22,6 +22,27 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y dpkg-dev
         
+    - name: Get version from tag
+      id: get_version
+      run: |
+        if [ "${{ github.ref_type }}" == "tag" ]; then
+          VERSION="${{ github.ref_name }}"
+          # Entferne 'v' Präfix falls vorhanden
+          VERSION=${VERSION#v}
+        else
+          VERSION="0.2.6"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+        
+    - name: Update Debian control file with version
+      run: |
+        VERSION="${{ steps.get_version.outputs.version }}"
+        # Aktualisiere die Version in der control-Datei
+        sed -i "s/^Version: .*/Version: $VERSION/" csv-konverter-deb/DEBIAN/control
+        echo "Version in control-Datei aktualisiert: $VERSION"
+        cat csv-konverter-deb/DEBIAN/control
+        
     - name: Build Debian package
       run: |
         # Stelle sicher, dass das Startskript ausführbar ist
@@ -103,8 +124,8 @@ jobs:
         merge-multiple: false
         path: artifacts
         
-    - name: Get version from tag
-      id: get_version
+    - name: Get version from tag (for release notes)
+      id: get_version_release
       run: |
         if [ "${{ github.ref_type }}" == "tag" ]; then
           VERSION="${{ github.ref_name }}"
@@ -122,10 +143,10 @@ jobs:
         files: |
           artifacts/csv-konverter-deb/csv-konverter.deb
           artifacts/csv-konverter-windows/CSVtoLEX.exe
-        tag_name: ${{ github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
-        name: Release ${{ github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
+        tag_name: ${{ github.ref_name || format('v{0}', steps.get_version_release.outputs.version) }}
+        name: Release ${{ github.ref_name || format('v{0}', steps.get_version_release.outputs.version) }}
         body: |
-          ## CSV to LEX Converter Release ${{ github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
+          ## CSV to LEX Converter Release ${{ github.ref_name || format('v{0}', steps.get_version_release.outputs.version) }}
           
           Automatisch erstelltes Release.
           
