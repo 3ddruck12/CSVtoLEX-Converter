@@ -137,21 +137,30 @@ jobs:
     - name: Build Windows executable
       run: |
         # Finde das richtige Verzeichnis mit gui.spec
-        if (Test-Path "csv-konverter\src\gui.spec") {
+        echo "Suche nach gui.spec..."
+        Get-ChildItem -Recurse -Filter "gui.spec" | Select-Object FullName
+        
+        if (Test-Path "csv-konverter\csv-konverter\src\gui.spec") {
+          $WORK_DIR = "csv-konverter\csv-konverter\src"
+        } elseif (Test-Path "csv-konverter\src\gui.spec") {
           $WORK_DIR = "csv-konverter\src"
         } elseif (Test-Path "src\gui.spec") {
           $WORK_DIR = "src"
         } else {
           echo "Fehler: gui.spec nicht gefunden"
+          Get-ChildItem -Recurse -Filter "gui.spec" | Select-Object FullName
           exit 1
         }
+        
+        echo "Arbeitsverzeichnis: $WORK_DIR"
         cd $WORK_DIR
         pyinstaller --clean --noconfirm gui.spec
-        # Suche nach der erstellten exe-Datei
+        
+        # Prüfe ob die Executable erstellt wurde
         $exeFile = Get-ChildItem -Recurse -Filter "*.exe" | Where-Object { $_.DirectoryName -like "*dist*" } | Select-Object -First 1
         if ($exeFile) {
           Copy-Item $exeFile.FullName "..\..\CSVtoLEX.exe"
-          echo "Exe-Datei gefunden: $($exeFile.FullName)"
+          echo "Exe-Datei erfolgreich erstellt: $((Get-Item ..\..\CSVtoLEX.exe).FullName)"
         } else {
           echo "Fehler: Exe-Datei nicht gefunden"
           Get-ChildItem -Recurse -Filter "*.exe" | Select-Object FullName
